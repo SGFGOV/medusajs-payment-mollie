@@ -1,4 +1,4 @@
-name: Version or Publish
+name: Version Bump
 
 on:
   push:
@@ -29,6 +29,6 @@ jobs:
         id: changesets
         uses: ./
         with:
-          version: yarn bump
+          version: yarn run version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}

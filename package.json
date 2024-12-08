@@ -1,6 +1,6 @@
 {
   "name": "medusajs-payment-mollie",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Mollie payment provider for Medusa",
   "main": "dist/index.js",
   "directories": {
@@ -22,7 +22,7 @@
     "test": "jest --passWithNoTests packages",
     "build": "rimraf dist && tsc --build ./tsconfig.json",
     "changeset": "changeset",
-    "bump": "node ./scripts/bump.js"
+    "version": "changeset version"
   },
   "devDependencies": {
     "@actions/exec": "^1.1.1",
