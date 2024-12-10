@@ -1,8 +1,12 @@
 export const constructMollieWebhookUrl = (
   providerId: string,
+  identifier: string,
   webhookUrlPrefix?: string
 ) => {
   if (!webhookUrlPrefix) return undefined;
 
-  return `${webhookUrlPrefix}/hooks/payment/${providerId}_mollie`;
+  /**
+   * @see  https://docs.medusajs.com/resources/commerce-modules/payment/webhook-events#getwebhookactionanddata-method
+   */
+  return `${webhookUrlPrefix}/hooks/payment/${identifier}_${providerId}`;
 };

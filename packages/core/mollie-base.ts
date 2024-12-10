@@ -3,6 +3,7 @@ import { EOL } from "os";
 /// Mollie SDK imports
 import MollieClientProvider, {
   type MollieClient,
+  type Payment,
   PaymentStatus,
 } from "@mollie/api-client";
 
@@ -37,7 +38,6 @@ import {
 } from "../utils";
 
 class MollieBase extends AbstractPaymentProvider<MollieOptions> {
-  static identifier = "mollie";
   protected container_: Record<string, unknown>;
 
   private mollieClient: MollieClient;
@@ -45,11 +45,15 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
 
   static validateOptions(options: MollieOptions): void {
     if (!isDefined(options.apiKey)) {
-      throw new Error("Required option `apiKey` is missing in Mollie plugin");
+      throw new Error(
+        "Required option `apiKey` is missing in Mollie plugin options"
+      );
     }
 
-    if (!isDefined(options.id)) {
-      throw new Error("Required option `id` is missing in Mollie plugin");
+    if (!isDefined(options.providerId)) {
+      throw new Error(
+        "Required option `providerId` is missing in Mollie plugin options"
+      );
     }
   }
 
@@ -61,9 +65,10 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
     super(...arguments);
 
     this.container_ = cradle;
-    // get the final webhook url for mollie to call on payment events change
+    // get the final webhook url for mollie to call on payment events
     this.webhookUrl = constructMollieWebhookUrl(
-      options.id,
+      options.providerId,
+      this.getIdentifier(),
       options?.webhookUrl
     );
 
@@ -73,6 +78,9 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
     });
   }
 
+  /**
+   * @dev returns Mollie to Medusa payment status. if status does not match with the map it returns PENDING
+   */
   protected getStatus(status: PaymentStatus) {
     return PaymentStatusMap[status] || PaymentSessionStatus.PENDING;
   }
@@ -154,8 +162,9 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
         data: PaymentProviderSessionResponse["data"];
       }
   > {
-    const id = paymentSessionData.id as string;
-    const updatedPaymentSession = await this.mollieClient.payments.get(id);
+    const updatedPaymentSession = (await this.retrievePayment(
+      paymentSessionData
+    )) as unknown as Payment;
 
     return {
       data: updatedPaymentSession as unknown as Record<string, unknown>,
@@ -167,16 +176,23 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
     paymentSessionData: Record<string, unknown>
   ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
     try {
-      const id = paymentSessionData.id as string;
+      /// fetch payment object from API
+      const payment = await this.retrievePayment(paymentSessionData);
 
-      if (!id) {
-        return paymentSessionData;
+      /// extract status
+      const status = (payment as unknown as Payment).status;
+      /// for which other PaymentStatus we cannot cancel a payment?
+      if (["canceled", "paid"].includes(status)) {
+        /// if payment has been canceled or paid return updated payment object
+        return payment;
       }
-      const payment = (await this.mollieClient.payments.cancel(
+
+      const id = paymentSessionData.id as string;
+      const cancelPayment = (await this.mollieClient.payments.cancel(
         id
       )) as unknown as PaymentProviderSessionResponse["data"];
 
-      return payment;
+      return cancelPayment;
     } catch (error) {
       return this.buildError("An error occurred in cancelPayment", error);
     }
@@ -185,7 +201,10 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
     paymentSessionData: Record<string, unknown>
   ): Promise<PaymentProviderError | PaymentProviderSessionResponse["data"]> {
     try {
-      if (paymentSessionData.status == "paid") {
+      /// do we need to refetch latest status from mollie api?
+      if (paymentSessionData.status != "authorized") {
+        // if status is not authorized return with incoming data.
+        // what will be issues use this flow?
         return paymentSessionData;
       }
 
@@ -194,6 +213,7 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
         paymentId: id,
       });
 
+      /// should we return payment object or capture?
       return payment as unknown as PaymentProviderSessionResponse["data"];
     } catch (error) {
       return this.buildError("An error occurred in capturePayment", error);
@@ -272,6 +292,15 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
     const payment = await this.mollieClient.payments.get(data.id as string);
 
     switch (payment.status) {
+      /// do we need `paid` case?
+      // case "paid":
+      //   return {
+      //     action: PaymentActions.SUCCESSFUL,
+      //     data: {
+      //       session_id: (payment.metadata as Record<string, any>).session_id,
+      //       amount: new BigNumber(payment.amount.value),
+      //     },
+      //   };
       case "authorized":
         return {
           action: PaymentActions.AUTHORIZED,
@@ -285,7 +314,15 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
         return {
           action: PaymentActions.FAILED,
           data: {
-            session_id: (data.metadata as Record<string, any>).session_id,
+            session_id: (payment.metadata as Record<string, any>).session_id,
+            amount: new BigNumber(payment.amount.value),
+          },
+        };
+      case "canceled":
+        return {
+          action: PaymentActions.FAILED,
+          data: {
+            session_id: (payment.metadata as Record<string, any>).session_id,
             amount: new BigNumber(payment.amount.value),
           },
         };

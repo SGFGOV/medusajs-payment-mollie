@@ -1,10 +1,10 @@
 import MollieBase from "../core/mollie-base";
-import { PaymentProviderKeys } from "../types";
+import { type MollieOptions, PaymentProviderKeys } from "../types";
 
 class MollieProviderService extends MollieBase {
   static identifier = PaymentProviderKeys.MOLLIE;
 
-  constructor(_, options) {
+  constructor(_, options: MollieOptions) {
     super(_, options);
   }
 }

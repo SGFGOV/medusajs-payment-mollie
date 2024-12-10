@@ -2,26 +2,29 @@ import { PaymentMethod } from "@mollie/api-client";
 
 export interface MollieOptions {
   /**
-   * id assigned to the payment provider in medusa-config.ts
-   * this will be used to construct webhook url for receiving events from Mollie API
+   * The ID assigned to the payment provider in `medusa-config.ts`.
+   * This ID will be used to construct the webhook URL for receiving events from the Mollie API.
    */
-  id: string;
+  providerId: string;
+
   /**
-   * The Mollie API key, starting with `'test_'` or `'live_'`.
+   * The Mollie API key, which starts with either `'test_'` or `'live_'`.
    */
   apiKey: string;
 
   /**
-   * Set a default description on the intent if the context does not provide one
+   * A default description to be used for the payment intent if no description is provided in the context.
    */
   paymentDescription?: string;
 
   /**
-   * The webhook url prefix. this will be used to construct the webhookUrl for Mollie events.
-   * e.g.
-   * webhookUrl: `https://example.com`
-   * id: mollie
-   * the final callback url will be `https://example.com/hooks/payment/mollie_mollie
+   * The base URL for the webhook. This will be used to construct the complete webhook URL for Mollie events.
+   * For example:
+   *   webhookUrl: `https://example.com`
+   *   providerId: `mollie`
+   * The final callback URL will be: `https://example.com/hooks/payment/mollie_mollie`
+   *
+   * The `webhookUrl` should always point to the domain where the Medusa backend is deployed.
    */
   webhookUrl?: string;
 }
