@@ -17,7 +17,7 @@
     "node": ">=20"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "scripts": {
     "test": "jest --passWithNoTests packages",
     "build": "rimraf dist && tsc --build ./tsconfig.json",
