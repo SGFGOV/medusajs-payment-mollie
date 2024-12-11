@@ -182,7 +182,7 @@ class MollieBase extends AbstractPaymentProvider<MollieOptions> {
       /// extract status
       const status = (payment as unknown as Payment).status;
       /// for which other PaymentStatus we cannot cancel a payment?
-      if (["canceled", "paid"].includes(status)) {
+      if (!["open", "pending", "authorized"].includes(status)) {
         /// if payment has been canceled or paid return updated payment object
         return payment;
       }
