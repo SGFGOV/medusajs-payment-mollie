@@ -28,9 +28,38 @@ export interface MollieOptions {
    */
   webhookUrl?: string;
 }
-
+/** support for  
+ * alma applepay bacs bancomatpay bancontact banktransfer belfius blik creditcard directdebit eps giftcard ideal kbc mybank paypal paysafecard pointofsale przelewy24 satispay trustly twint
+ * 
+ * 
+ * 
+*/
 export const PaymentProviderKeys = {
   MOLLIE: "mollie",
+  BAN_CONTACT: "mollie-bancontact",
+  ALMA: "mollie-alma",
+  APPLE_PAY: "mollie-applepay",
+  BACS: "mollie-bacs",
+  BANCOMAT_PAY: "mollie-bancomatpay",
+  BANCONTACT: "mollie-bancontact",
+  BANK_TRANSFER: "mollie-banktransfer",
+  BELFIUS: "mollie-belfius",
+  BLIK: "mollie-blik",
+  CREDIT_CARD: "mollie-creditcard",
+  DIRECT_DEBIT: "mollie-directdebit",
+  EPS: "mollie-eps",
+  GIFT_CARD: "mollie-giftcard",
+  IDEAL: "mollie-ideal",
+  KBC: "mollie-kbc",
+  MY_BANK: "mollie-mybank",
+  PAYPAL: "mollie-paypal",
+  PAYSAFECARD: "mollie-paysafecard",
+  POINT_OF_SALE: "mollie-pointofsale",
+  PRZELEWY24: "mollie-przelewy24",
+  SATISPAY: "mollie-satispay",
+  TRUSTLY: "mollie-trustly",
+  TWINT: "mollie-twint",
+  
 };
 
 export type PaymentContextExtra = {
