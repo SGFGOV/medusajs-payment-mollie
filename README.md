@@ -70,7 +70,14 @@ modules: [
 ];
 ```
 
-Currently we support mollie-bancontact,creditcard, and ideal.
+Currently we support 
+  * bancontact,
+  * creditcard 
+  * ideal
+  * apple pay
+  * bank transfer
+
+Please ensure you enable only these in the dashboard
 
 ### Create a Custom API Endpoint
 
