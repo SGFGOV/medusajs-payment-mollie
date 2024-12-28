@@ -61,7 +61,7 @@ modules: [
              *
              * The `webhookUrl` should always point to the domain where the Medusa backend is deployed.
              */
-            webhookUrl: "https://your-domain.com",
+            webhookUrl: "https://your-domain.com", 
           },
         },
       ],
@@ -69,6 +69,8 @@ modules: [
   },
 ];
 ```
+
+Currently we support mollie-bancontact,creditcard, and ideal.
 
 ### Create a Custom API Endpoint
 
@@ -188,8 +190,8 @@ const handleSubmit = async () => {
 
       if (isMollieFunc(selectedPaymentMethod)) {
         const parts = selectedPaymentMethod.split("_");
-        method = parts.pop();
-        providerId = parts.join("_");
+        method = parts[2];
+        providerId = parts.push("mollie").join("_");
         redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/place-order/${cart.id}`;
       }
 
@@ -276,7 +278,7 @@ export const MolliePaymentOptions = (props: {
         {paymentOptions.map(({ description, id, image }) => (
           <RadioGroup.Option
             /// the prefix `pp_mollie_mollie_` should be same as the provider_id
-            value={`pp_mollie_mollie_${id}`}
+            value={`pp_mollie_${id}_mollie`}
             key={id}
             className={clx(
               "flex flex-col gap-y-2 text-small-regular cursor-pointer py-4 border rounded-rounded px-8 mb-2 hover:shadow-borders-interactive-with-active",
@@ -303,6 +305,104 @@ export const MolliePaymentOptions = (props: {
   );
 };
 ```
+### Mollie Payment Button Component 
+add to payment-button/index.tsx
+
+```typescript
+const MolliePaymentButton = ({
+  cart,
+  notReady,
+}: {
+  cart: HttpTypes.StoreCart
+  notReady: boolean
+}) => {
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === "pending"
+  ) as {
+    data?: {
+      _links?: {
+        checkout: {
+          href: string
+        }
+      }
+    }
+  }
+
+  const handlePayment = () => {
+    if (!session || !session.data?._links) return
+    window.location.replace(session.data._links.checkout.href)
+  }
+
+  return (
+    <Button
+      disabled={notReady || !session || !session.data?._links}
+      onClick={handlePayment}
+    >
+      Place Order
+    </Button>
+  )
+}
+```
+
+### Mollie support payments list
+Into payments/index.ts insert
+```typescript
+
+ <MolliePaymentOptions
+                selectedOptionId={selectedPaymentMethod}
+                setSelectedOptionId={setSelectedPaymentMethod}
+              />
+
+```
+The complete snippet is below
+```typescript
+<>
+              <RadioGroup
+                value={selectedPaymentMethod}
+                onChange={(value: string) => setSelectedPaymentMethod(value)}
+              >
+                {availablePaymentMethods.map((paymentMethod) => {
+                  if (isMollie(paymentMethod.id)) return null
+                  return (
+                    <PaymentContainer
+                      paymentInfoMap={paymentInfoMap}
+                      paymentProviderId={paymentMethod.id}
+                      key={paymentMethod.id}
+                      selectedPaymentOptionId={selectedPaymentMethod}
+                    />
+                  )
+                })}
+              </RadioGroup>
+
+              <MolliePaymentOptions
+                selectedOptionId={selectedPaymentMethod}
+                setSelectedOptionId={setSelectedPaymentMethod}
+              />
+              {isStripe && stripeReady && (
+                <div className="mt-5 transition-all duration-150 ease-in-out">
+                  <Text className="txt-medium-plus text-ui-fg-base mb-1">
+                    Enter your card details:
+                  </Text>
+
+                  <CardElement
+                    options={useOptions as StripeCardElementOptions}
+                    onChange={(e) => {
+                      setCardBrand(
+                        e.brand &&
+                          e.brand.charAt(0).toUpperCase() + e.brand.slice(1)
+                      )
+                      setError(e.error?.message || null)
+                      setCardComplete(e.complete)
+                    }}
+                  />
+                </div>
+              )}
+            </>
+
+```
+
+
+
 
 ## Contributing
 

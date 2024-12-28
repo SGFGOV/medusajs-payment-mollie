@@ -1,12 +1,12 @@
 import MollieBase from "../core/mollie-base";
 import { type MollieOptions, PaymentProviderKeys } from "../types";
 
-class MollieCreditcardProviderService extends MollieBase {
-  static identifier = PaymentProviderKeys.CREDITCARD;
+class MollieApplePayProviderService extends MollieBase {
+  static identifier = PaymentProviderKeys.BANKTRANSFER;
 
   constructor(_, options: MollieOptions) {
     super(_, options);
   }
 }
 
-export default MollieCreditcardProviderService;
+export default MollieApplePayProviderService;
